@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Car Accident Detection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 100%;
+      animation: fadeIn 0.7s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    h1 {
+      color: #2c5364;
+      margin-bottom: 10px;
+    }
+    h2 {
+      color: #203a43;
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    label {
+      display: inline-block;
+      padding: 12px 30px;
+      background-color: #2c5364;
+      color: white;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      margin-bottom: 15px;
+    }
+    label:hover {
+      background-color: #203a43;
+      transform: translateY(-2px);
+    }
+    button {
+      padding: 12px 30px;
+      background: #2c5364;
+      color: white;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #203a43;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    .result {
+      margin-top: 25px;
+      font-size: 1.2em;
+      font-weight: 600;
+    }
+    .result.success {
+      color: #28a745;
+    }
+    .result.error {
+      color: #dc3545;
+    }
+    .spinner {
+      margin-top: 20px;
+      display: none;
+      font-size: 1.1em;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🚗 Car Accident Detector</h1>
+  <h2>AI-powered vehicle damage analysis</h2>
+  <p>Select an image to check for a car accident.</p>
+
+  <label for="imageInput" id="fileLabel">
+    <span id="fileName">Choose an image</span>
+  </label>
+  <input type="file" id="imageInput" accept="image/*"><br>
+
+  <button id="uploadBtn" onclick="uploadImage()">Analyze</button>
+
+  <div class="spinner" id="spinner">🔄 Analyzing image...</div>
+  <div id="result" class="result"></div>
+</div>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const fileNameSpan = document.getElementById('fileName');
+
+  imageInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (file) {
+      fileNameSpan.textContent = file.name;
+    } else {
+      fileNameSpan.textContent = "Choose an image";
+    }
+  });
+
+  function uploadImage() {
+    const file = imageInput.files[0];
+    const resultDiv = document.getElementById('result');
+    const spinner = document.getElementById('spinner');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    resultDiv.textContent = '';
+    resultDiv.className = 'result';
+
+    if (!file) {
+      alert("Please select an image file!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    spinner.style.display = 'block';
+    uploadBtn.disabled = true;
+
+    fetch('/predict', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      resultDiv.textContent = data.result;
+      resultDiv.classList.add(data.result.includes("Accident") ? 'success' : 'error');
+    })
+    .catch(error => {
+      resultDiv.textContent = "An error occurred. Please try again.";
+      resultDiv.classList.add('error');
+    })
+    .finally(() => {
+      spinner.style.display = 'none';
+      uploadBtn.disabled = false;
+    });
+  }
+</script>
+
+</body>
+</html>
